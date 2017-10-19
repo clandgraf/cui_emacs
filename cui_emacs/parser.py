@@ -2,14 +2,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+# TODO
+# - support more types (array, cons-cells)
+
 from cui_emacs.util import LispException
 
-class Unreadable(object):
-    def __init__(self, name):
-        self.name = name
+# class Unreadable(object):
+#     def __init__(self, name):
+#         self.name = name
 
-    def __str__(self):
-        return '#<%s>' % self.name
+#     def __str__(self):
+#         return '#<%s>' % self.name
 
 class Symbol(object):
     def __init__(self, name):
@@ -70,11 +73,11 @@ def parse_number(string, idx):
         number = number * 10 + int(string[idx])
         idx = advance_index(string, idx)
 
-def parse_unreadable(string, idx):
-    index = string[idx:].find('>')
-    if index == -1:
-        raise LispException('Expected matching \'>\'')
-    return Unreadable(string[idx:index]), idx + index + 1
+# def parse_unreadable(string, idx):
+#     index = string[idx:].find('>')
+#     if index == -1:
+#         raise LispException('Expected matching \'>\'')
+#     return Unreadable(string[idx:index]), idx + index + 1
 
 def parse_symbol(string, idx):
     sym = ''
@@ -102,7 +105,8 @@ def parse_expression(string, idx=0):
     elif string[idx] == '"':
         return parse_string(string, idx + 1)
     elif string[idx:].startswith('#<'):
-        return parse_unreadable(string, idx + 2)
+        #return parse_unreadable(string, idx + 2)
+        raise LispException('Encountered unreadable')
     elif string[idx].isdigit():
         return parse_number(string, idx)
     else:

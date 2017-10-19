@@ -73,11 +73,3 @@ This does not remove the overlay from memory."
         (forward-line (- line-number 1))
         (recenter)
         (point)))))
-
-
-(cui/highlight-line "test/overlay"
-                    "c:/src/cs/applications/cs.all/trunk/package_sources/cs.web/cs/web/components/base/js/src/formcontrols/TextInput.jsx"
-                    132)
-(cui/unhighlight-line "test/overlay")
-(cui/remove-overlay "test/overlay")
-(cui/remove-overlays)

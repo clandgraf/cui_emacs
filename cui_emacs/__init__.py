@@ -2,6 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+# TODO declare_module function ask for loading modules
+#      on startup if functions are not defined
+
 import cui
 import os
 import subprocess
@@ -27,7 +30,7 @@ def _convert_arg(arg):
 
     raise LispException("Unsupported arg-type: %s" % type(arg))
 
-def evaluate(string):
+def evaluate(string, handle_result=True):
     log_calls = cui.get_variable(['logging', 'emacs-calls'])
     if log_calls:
         cui.message('emacs-call: %s' % string)
@@ -40,7 +43,7 @@ def evaluate(string):
     result = proc.stdout.decode('utf-8').strip()
     if log_calls:
         cui.message('emacs-result: %s' % result)
-    return parse(result)
+    return parse(result) if handle_result else None
 
 def _set_function_info(fn, info):
     fn.__doc__ = info
@@ -53,12 +56,13 @@ def _retrieve_function_infos(symbols, info_fn='#\'documentation'):
                     % (info_fn,
                        ' '.join(('#\'%s' % sym for sym in symbols))))
 
-def declare_function(name):
+def declare_function(name, handle_result=True):
     """Declare an existing function in emacs lisp."""
     def _fn(*args):
         return evaluate("(%s %s)"
                         % (name,
-                           ' '.join(map(_convert_arg, args))))
+                           ' '.join(map(_convert_arg, args))),
+                        handle_result=handle_result)
     if (cui.has_run(initialize)):
         _set_function_info(_fn, _retrieve_function_info(name))
     else:
