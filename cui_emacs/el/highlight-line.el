@@ -5,11 +5,13 @@
 ;; TODO tooltip
 ;; TODO window prop optional
 
-(defface cui/highlight
+(provide 'cui/highlight)
+
+(defface cui/highlight-color
   '((t :background "#444400"))
   "Debugger highlighting current code position")
 
-(defcustom cui/highlight-face 'cui/highlight
+(defcustom cui/highlight-color-face 'cui/highlight-color
   "Face with which to highlight the current line in Hl-Line mode."
   :type 'face)
 

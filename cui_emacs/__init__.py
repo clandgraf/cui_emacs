@@ -9,18 +9,19 @@ import cui
 import os
 import subprocess
 
-from cui.util import local_file
+from cui.util import translate_path
 from cui_emacs.parser import parse
 from cui_emacs.util import LispException
 
 FUNCTION_TEMPLATE = "(defun %(name)s (%(args)s) %(body)s)"
-
 FUNCTION_LIST = []
-
+PACKAGE_LIST = []
 DEFERRED_FN_INFO = []
 
-cui.def_variable(['emacsclient'], 'emacsclient')
+cui.def_variable(['emacs', 'emacsclient'], 'emacsclient')
+cui.def_variable(['emacs', 'file-mapping'], None)
 cui.def_variable(['logging', 'emacs-calls'], False)
+
 
 def _convert_arg(arg):
     if isinstance(arg, str):
@@ -30,12 +31,13 @@ def _convert_arg(arg):
 
     raise LispException("Unsupported arg-type: %s" % type(arg))
 
+
 def evaluate(string, handle_result=True):
     log_calls = cui.get_variable(['logging', 'emacs-calls'])
     if log_calls:
         cui.message('emacs-call: %s' % string)
 
-    proc = subprocess.run([cui.get_variable(['emacsclient']), "-e", string],
+    proc = subprocess.run([cui.get_variable(['emacs', 'emacsclient']), "-e", string],
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE)
     if (proc.returncode != 0):
@@ -45,16 +47,20 @@ def evaluate(string, handle_result=True):
         cui.message('emacs-result: %s' % result)
     return parse(result) if handle_result else None
 
+
 def _set_function_info(fn, info):
     fn.__doc__ = info
 
+
 def _retrieve_function_info(symbol, info_fn='#\'documentation'):
     return evaluate("(funcall %s #'%s)" % (info_fn, symbol))
+
 
 def _retrieve_function_infos(symbols, info_fn='#\'documentation'):
     return evaluate("(mapcar %s (list %s))"
                     % (info_fn,
                        ' '.join(('#\'%s' % sym for sym in symbols))))
+
 
 def declare_function(name, handle_result=True):
     """Declare an existing function in emacs lisp."""
@@ -68,6 +74,26 @@ def declare_function(name, handle_result=True):
     else:
         DEFERRED_FN_INFO.append((name, _fn))
     return _fn
+
+
+class Package(object):
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
+
+    def load(self):
+        evaluate("(if (not (member '%s features)) (load %s))"
+                 % (self.name, _convert_arg(translate_path(cui.get_variable(['emacs', 'file-mapping']),
+                                                           self.path))))
+
+
+def declare_package(name, path):
+    pkg = Package(name, path)
+    if cui.has_run(initialize):
+        pkg.load()
+    else:
+        PACKAGE_LIST.append(pkg)
+    return pkg
 
 
 def defun(e_name, e_args, body=None, path_to_body=None):
@@ -91,7 +117,7 @@ def defun(e_name, e_args, body=None, path_to_body=None):
 
 @cui.post_init_func
 def initialize():
-    proc = subprocess.run([cui.get_variable(['emacsclient']), '--version'],
+    proc = subprocess.run([cui.get_variable(['emacs', 'emacsclient']), '--version'],
                           universal_newlines=True,
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE)
@@ -101,6 +127,9 @@ def initialize():
     # define functions from python
     while len(FUNCTION_LIST):
         evaluate(FUNCTION_LIST.pop(0))
+
+    while len(PACKAGE_LIST):
+        PACKAGE_LIST.pop(0).load()
 
     # retrieve doc for declared functions
     global DEFERRED_FN_INFO

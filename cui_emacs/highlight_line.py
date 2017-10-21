@@ -4,6 +4,12 @@
 
 import cui_emacs
 
+from cui.util import local_file
+
+__el_pkg__ = cui_emacs.declare_package('cui/highlight',
+                                       local_file(__file__,
+                                                  'el/highlight-line.el'))
+
 highlight_line = cui_emacs.declare_function('cui/highlight-line',
                                             handle_result=False)
 unhighlight_line = cui_emacs.declare_function('cui/unhighlight-line')
