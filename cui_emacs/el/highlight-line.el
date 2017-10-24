@@ -49,7 +49,7 @@ This does not remove the overlay from memory."
   (let ((overlay (make-overlay (point) (point))))
     (overlay-put overlay 'help-echo overlay-id)
     (overlay-put overlay 'priority -40)
-    (overlay-put overlay 'face cui/highlight-face)
+    (overlay-put overlay 'face cui/highlight-color-face)
     overlay))
 
 (defun cui/remove-overlay (overlay-id)
