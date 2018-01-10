@@ -9,7 +9,7 @@ import cui
 import os
 import subprocess
 
-from cui.util import translate_path
+from cui.tools.file_mapping import FileMapping
 from cui_emacs.parser import parse
 from cui_emacs.util import LispException
 
@@ -19,7 +19,7 @@ PACKAGE_LIST = []
 DEFERRED_FN_INFO = []
 
 cui.def_variable(['emacs', 'emacsclient'], 'emacsclient')
-cui.def_variable(['emacs', 'file-mapping'], None)
+cui.def_variable(['emacs', 'file-mapping'], FileMapping())
 cui.def_variable(['logging', 'emacs-calls'], False)
 
 
@@ -82,9 +82,8 @@ class Package(object):
         self.path = path
 
     def load(self):
-        evaluate("(if (not (member '%s features)) (load %s))"
-                 % (self.name, _convert_arg(translate_path(cui.get_variable(['emacs', 'file-mapping']),
-                                                           self.path))))
+        path = _convert_arg(cui.get_variable(['emacs', 'file-mapping']).to_other(self.path))
+        evaluate("(if (not (member '%s features)) (load %s))" % (self.name, path))
 
 
 def declare_package(name, path):
