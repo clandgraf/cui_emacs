@@ -9,7 +9,7 @@ import cui
 import os
 import subprocess
 
-from cui.tools.file_mapping import FileMapping
+from cui.util.file_mapping import FileMapping
 from cui_emacs.parser import parse
 from cui_emacs.util import LispException
 
